@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using qy.CrossPlatformInput;
 
-public class CharacterControle : MonoBehaviour
+public class CharacterController2D : MonoBehaviour
 {
+	[SerializeField]
+	private float m_MaxSpeed = 10f;
+	[SerializeField]
+	private float m_JumpForce = 600f;
 
 	private Rigidbody2D rigidbody;
 	private Animator animator;
+	private Vector2 maxSpeed = new Vector2(6,30);
 
 	private Rect displayRect = new Rect();
 	// Use this for initialization
@@ -18,16 +23,9 @@ public class CharacterControle : MonoBehaviour
 
 		updateDisplayRect();
 	}
-	
+
 	void Update()
 	{
-		if (CrossPlatformInputManager.GetButtonDown(CrossPlatformInput.JUMP_LEFT))
-		{
-			jump(new Vector2(-100,600));
-		}else if (CrossPlatformInputManager.GetButtonDown(CrossPlatformInput.JUMP_RIGHT))
-		{
-			jump(new Vector2(100, 600));
-		}
 		updateBoundary();
 	}
 
@@ -39,14 +37,23 @@ public class CharacterControle : MonoBehaviour
 		displayRect.height = a.y;
 	}
 
-	void jump(Vector2 v)
+	public void move(float move,bool jump)
 	{
-		rigidbody.AddForce(v);
+		rigidbody.velocity = new Vector2(move * m_MaxSpeed,rigidbody.velocity.y);
+		animator.SetFloat("Speed", Mathf.Abs(move));
+
 		Vector3 scale = transform.localScale;
-		scale.x = Mathf.Abs(scale.x) * (v.x > 0 ? 1 : -1);
+		scale.x = Mathf.Abs(scale.x) * (move > 0 ? 1 : -1);
 		transform.localScale = scale;
+
+		if (jump)
+		{
+			rigidbody.AddForce(new Vector2(0, m_JumpForce));
+			animator.SetBool("Ground", false);
+		}
 	}
 
+	//落在地面上让人站住播放待机动画，碰到其他角色，障碍物或者地面的非可站立面都收到反方向的弹力
 	void OnCollisionEnter2D(Collision2D coll)
 	{
 		if (coll.gameObject.tag == "Ground")
@@ -56,7 +63,6 @@ public class CharacterControle : MonoBehaviour
 		}
 		else
 		{
-			animator.SetBool("Ground", true);
 			Vector2 direction = Vector2.zero;
 
 			foreach (ContactPoint2D contact in coll.contacts)
@@ -90,6 +96,7 @@ public class CharacterControle : MonoBehaviour
 		return R;
 	}
 
+	//计算左右穿越
 	void updateBoundary()
 	{
 		if (gameObject.transform.position.x>displayRect.width/2)

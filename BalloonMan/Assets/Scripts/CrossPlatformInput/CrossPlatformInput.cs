@@ -5,9 +5,9 @@ using UnityEngine;
 public class CrossPlatformInput : MonoBehaviour
 {
 
-	public const string JUMP_LEFT = "jumpLeft";
-	public const string JUMP_RIGHT = "jumpRight";
-
+	public const string AXIS_HORIZONTAL = "AXIS_HORIZONTAL";
+	public const string AXIS_VERTICAL = "AXIS_VERTICAL";
+	public const string JUMP = "JUMP";
 
 	void Awake () 
 	{

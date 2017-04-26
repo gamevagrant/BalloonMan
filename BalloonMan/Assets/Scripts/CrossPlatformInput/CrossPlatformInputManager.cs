@@ -82,7 +82,7 @@ namespace qy.CrossPlatformInput
 		// -- Button handling --
 		public static bool GetButton(string name)
 		{
-			if (m_VirtualButtons.ContainsKey(name))
+			if (!m_VirtualButtons.ContainsKey(name))
 			{
 				RegisterVirtualButton(new VirtualButton(name));
 			}
