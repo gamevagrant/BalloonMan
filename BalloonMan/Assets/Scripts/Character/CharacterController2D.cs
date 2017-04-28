@@ -9,10 +9,12 @@ public class CharacterController2D : MonoBehaviour
 	private float m_MaxSpeed = 10f;
 	[SerializeField]
 	private float m_JumpForce = 600f;
+	[SerializeField]
+	private Balloon[] balloons;
 
 	private Rigidbody2D rigidbody;
 	private Animator animator;
-	private Vector2 maxSpeed = new Vector2(6,30);
+	private SpriteRenderer sprite;
 
 	private Rect displayRect = new Rect();
 	// Use this for initialization
@@ -20,8 +22,10 @@ public class CharacterController2D : MonoBehaviour
 	{
 		rigidbody = gameObject.GetComponent<Rigidbody2D>();
 		animator = gameObject.GetComponent<Animator>();
-
+		sprite = gameObject.GetComponent<SpriteRenderer>();
 		updateDisplayRect();
+		CircleCollider2D c;
+		
 	}
 
 	void Update()
@@ -29,29 +33,6 @@ public class CharacterController2D : MonoBehaviour
 		updateBoundary();
 	}
 
-	void updateDisplayRect()
-	{
-		Vector3 a = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height,0)) -  Camera.main.ScreenToWorldPoint(new Vector3(0, 0, 0));
-
-		displayRect.width = a.x;
-		displayRect.height = a.y;
-	}
-
-	public void move(float move,bool jump)
-	{
-		rigidbody.velocity = new Vector2(move * m_MaxSpeed,rigidbody.velocity.y);
-		animator.SetFloat("Speed", Mathf.Abs(move));
-
-		Vector3 scale = transform.localScale;
-		scale.x = Mathf.Abs(scale.x) * (move > 0 ? 1 : -1);
-		transform.localScale = scale;
-
-		if (jump)
-		{
-			rigidbody.AddForce(new Vector2(0, m_JumpForce));
-			animator.SetBool("Ground", false);
-		}
-	}
 
 	//落在地面上让人站住播放待机动画，碰到其他角色，障碍物或者地面的非可站立面都收到反方向的弹力
 	void OnCollisionEnter2D(Collision2D coll)
@@ -84,9 +65,18 @@ public class CharacterController2D : MonoBehaviour
 		{
 			animator.SetBool("Ground", false);
 		}
-		
-
 	}
+
+
+	void updateDisplayRect()
+	{
+		Vector3 a = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0)) - Camera.main.ScreenToWorldPoint(new Vector3(0, 0, 0));
+
+		displayRect.width = a.x;
+		displayRect.height = a.y;
+	}
+
+	
 
 	Vector2 getReflex(Vector2 I ,Vector2 N)
 	{
@@ -111,5 +101,44 @@ public class CharacterController2D : MonoBehaviour
 			point.x = displayRect.width / 2;
 			gameObject.transform.position = point;
 		}
+	}
+
+	/// <summary>
+	/// 移动，move范围在-1到1之间
+	/// </summary>
+	/// <param name="move"></param>
+	/// <param name="jump"></param>
+	public void move(float move, bool jump)
+	{
+		if (move > 1)
+		{
+			move = 1;
+		}
+		else if (move < -1)
+		{
+			move = -1;
+		}
+		rigidbody.velocity = new Vector2(move * m_MaxSpeed, rigidbody.velocity.y);
+		//rigidbody.AddForce(new Vector2(move * 20,0));
+		animator.SetFloat("Speed", Mathf.Abs(move));
+
+		//Vector3 scale = transform.localScale;
+		//scale.x = Mathf.Abs(scale.x) * (move > 0 ? 1 : -1);
+		//transform.localScale = scale;
+		sprite.flipX = move > 0 ? false : true;
+
+		if (jump)
+		{
+			rigidbody.AddForce(new Vector2(0, m_JumpForce));
+			animator.SetBool("Ground", false);
+		}
+	}
+
+	/// <summary>
+	/// 吹气
+	/// </summary>
+	public void blowing()
+	{
+		
 	}
 }
