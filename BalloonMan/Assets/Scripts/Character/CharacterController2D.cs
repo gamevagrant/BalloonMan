@@ -33,6 +33,10 @@ public class CharacterController2D : MonoBehaviour
 		updateBoundary();
 	}
 
+	void FixedUpdate()
+	{
+		rigidbody.AddForce(new Vector2(0,1000) * Time.deltaTime);
+	}
 
 	//落在地面上让人站住播放待机动画，碰到其他角色，障碍物或者地面的非可站立面都收到反方向的弹力
 	void OnCollisionEnter2D(Collision2D coll)
