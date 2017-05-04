@@ -5,8 +5,9 @@ using UnityEngine;
 
 public class Balloon : MonoBehaviour
 {
-	public delegate void OnTriggerEnter(Collider2D other);
-	public OnTriggerEnter onTriggerEnter;
+	public delegate void OnBalloonBroken(Collision2D other);
+	public OnBalloonBroken onBalloonBroken;
+	public bool isBroken = false;
 
 	private BalloonData data;
 	private CircleCollider2D collider;
@@ -23,41 +24,30 @@ public class Balloon : MonoBehaviour
 	}
 	void Update()
 	{
-		if (data!=null && data.localRotation.eulerAngles.z != transform.parent.localRotation.eulerAngles.z)
+		if (data!=null && data.localRotation.eulerAngles.z != transform.localRotation.eulerAngles.z)
 		{
 
-			transform.parent.localRotation = Quaternion.Lerp(transform.parent.localRotation, data.localRotation, 5f * Time.deltaTime);
+			transform.localRotation = Quaternion.Lerp(transform.localRotation, data.localRotation, 5f * Time.deltaTime);
 
-			transform.parent.localPosition = Vector3.Lerp(transform.parent.localPosition,data.localPosition, 0.5f);
+			transform.localPosition = Vector3.Lerp(transform.localPosition,data.localPosition, 0.5f);
 		}
 	}
 
-	void OnTriggerEnter2D(Collider2D other)
-	{
-		if (onTriggerEnter != null)
-		{
-			onTriggerEnter(other);
-		}
-		//Debug.Log(other.name);
-	}
 
 	void OnCollisionEnter2D(Collision2D coll)
 	{
-		if (coll.collider.tag == "Player" && onTriggerEnter != null)
+		if (onBalloonBroken != null && coll.collider.gameObject.layer == LayerMask.NameToLayer("Character"))
 		{
-			onTriggerEnter(coll.collider);
-			//broken();
+			broken();
+			onBalloonBroken(coll);
 		}
-		Vector3 force = (new Vector2(transform.position.x, transform.position.y) - coll.contacts[0].point).normalized*2*coll.relativeVelocity.sqrMagnitude;
-		collider.attachedRigidbody.AddForce(force);
 
-		broken();
-		Debug.Log(coll.collider.name);
 	}
 
 	void broken()
 	{
-		transform.parent.DOScale(new Vector3(0, 0, 0), 0.5f).SetEase(Ease.OutExpo).OnComplete(() =>
+		isBroken = true;
+		transform.DOScale(new Vector3(0, 0, 0), 0.5f).SetEase(Ease.OutExpo).OnComplete(() =>
 		{
 			gameObject.SetActive(false);
 		});
@@ -65,7 +55,17 @@ public class Balloon : MonoBehaviour
 
 	public void blow(float time = 0.5f)
 	{
-		transform.parent.DOScale(new Vector3(1, 1, 1), time);
+		isBroken = false;
+		gameObject.SetActive(true);
+		transform.DOScale(new Vector3(1, 1, 1), time);
+	}
+
+	public void blowing(float f)
+	{
+		isBroken = false;
+		gameObject.SetActive(true);
+		transform.localScale = Vector3.one*f;
+
 	}
 
 	public void setData(BalloonData data)

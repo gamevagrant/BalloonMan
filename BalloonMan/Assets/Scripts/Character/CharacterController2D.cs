@@ -10,21 +10,31 @@ public class CharacterController2D : MonoBehaviour
 	[SerializeField]
 	private float m_JumpForce = 600f;
 	[SerializeField]
-	private Balloon[] balloons;
+	private BalloonsController balloonsController;
+	[SerializeField]
+	private LayerMask m_WhatIsGround;//地面的层
 
 	private Rigidbody2D rigidbody;
 	private Animator animator;
 	private SpriteRenderer sprite;
+	private Transform groundCheck; //判断是否落地的监测点
+	private bool isGrounded;//是否在地面上
+	private const float groundedRadius = .2f;//检测落地点的半径
 
 	private Rect displayRect = new Rect();
-	// Use this for initialization
+
+	void Awake()
+	{
+		groundCheck = transform.Find("GroundCheck");
+	}
+
+
 	void Start ()
 	{
 		rigidbody = gameObject.GetComponent<Rigidbody2D>();
 		animator = gameObject.GetComponent<Animator>();
 		sprite = gameObject.GetComponent<SpriteRenderer>();
 		updateDisplayRect();
-		CircleCollider2D c;
 		
 	}
 
@@ -35,19 +45,43 @@ public class CharacterController2D : MonoBehaviour
 
 	void FixedUpdate()
 	{
-		rigidbody.AddForce(new Vector2(0,1000) * Time.deltaTime);
+		isGrounded = false;
+
+		Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.position, groundedRadius, m_WhatIsGround);
+		for (int i = 0; i < colliders.Length; i++)
+		{
+			if (colliders[i].gameObject != gameObject)
+			{
+				isGrounded = true;
+				if (balloonsController && !balloonsController.hasBalloon)
+				{
+					balloonsController.blowing(1f/2*Time.fixedDeltaTime);
+				}
+				
+			}
+		}
+		animator.SetBool("Ground", isGrounded);
+
+		// Set the vertical animation
+		animator.SetFloat("vSpeed", rigidbody.velocity.y);
 	}
 
 	//落在地面上让人站住播放待机动画，碰到其他角色，障碍物或者地面的非可站立面都收到反方向的弹力
 	void OnCollisionEnter2D(Collision2D coll)
 	{
+		/*
 		if (coll.gameObject.tag == "Ground")
 		{
 			animator.SetBool("Ground", true);
 			rigidbody.velocity = Vector2.zero;
+			if (balloonsController && !balloonsController.hasBalloon)
+			{
+				//blowing();
+			}
 		}
 		else
 		{
+			//做碰撞反向给力
 			Vector2 direction = Vector2.zero;
 
 			foreach (ContactPoint2D contact in coll.contacts)
@@ -59,7 +93,7 @@ public class CharacterController2D : MonoBehaviour
 			//Debug.Log(coll.contacts.Length);
 			rigidbody.AddForce(direction * 20);
 		}
-		
+		*/
 
 	}
 
@@ -114,6 +148,12 @@ public class CharacterController2D : MonoBehaviour
 	/// <param name="jump"></param>
 	public void move(float move, bool jump)
 	{
+		if (balloonsController && !balloonsController.hasBalloon )
+		{
+			rigidbody.velocity = new Vector2(0, rigidbody.velocity.y);
+			animator.SetFloat("Speed", 0);
+			return;
+		}
 		if (move > 1)
 		{
 			move = 1;
@@ -123,12 +163,9 @@ public class CharacterController2D : MonoBehaviour
 			move = -1;
 		}
 		rigidbody.velocity = new Vector2(move * m_MaxSpeed, rigidbody.velocity.y);
-		//rigidbody.AddForce(new Vector2(move * 20,0));
+
 		animator.SetFloat("Speed", Mathf.Abs(move));
 
-		//Vector3 scale = transform.localScale;
-		//scale.x = Mathf.Abs(scale.x) * (move > 0 ? 1 : -1);
-		//transform.localScale = scale;
 		sprite.flipX = move > 0 ? false : true;
 
 		if (jump)
@@ -143,6 +180,6 @@ public class CharacterController2D : MonoBehaviour
 	/// </summary>
 	public void blowing()
 	{
-		
+		//balloonsController.blow(3);
 	}
 }
