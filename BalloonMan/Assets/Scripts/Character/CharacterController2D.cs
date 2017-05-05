@@ -8,7 +8,9 @@ public class CharacterController2D : MonoBehaviour
 	[SerializeField]
 	private float m_MaxSpeed = 10f;
 	[SerializeField]
-	private float m_JumpForce = 600f;
+	private float m_Acceleration = 10000f;
+	[SerializeField]
+	public float m_JumpForce = 600f;
 	[SerializeField]
 	private BalloonsController balloonsController;
 	[SerializeField]
@@ -53,48 +55,29 @@ public class CharacterController2D : MonoBehaviour
 			if (colliders[i].gameObject != gameObject)
 			{
 				isGrounded = true;
-				if (balloonsController && !balloonsController.hasBalloon)
-				{
-					balloonsController.blowing(1f/2*Time.fixedDeltaTime);
-				}
-				
+				blowing();
 			}
 		}
 		animator.SetBool("Ground", isGrounded);
 
 		// Set the vertical animation
-		animator.SetFloat("vSpeed", rigidbody.velocity.y);
+		//animator.SetFloat("vSpeed", rigidbody.velocity.y);
+		animator.SetFloat("Speed", Mathf.Abs(rigidbody.velocity.x));
+		
 	}
 
 	//落在地面上让人站住播放待机动画，碰到其他角色，障碍物或者地面的非可站立面都收到反方向的弹力
 	void OnCollisionEnter2D(Collision2D coll)
 	{
-		/*
-		if (coll.gameObject.tag == "Ground")
+		if (coll.gameObject.layer!=LayerMask.NameToLayer("Character"))
 		{
-			animator.SetBool("Ground", true);
-			rigidbody.velocity = Vector2.zero;
-			if (balloonsController && !balloonsController.hasBalloon)
+			if (!isGrounded)
 			{
-				//blowing();
+				Debug.Log(coll.relativeVelocity);
+				rigidbody.velocity = Vector2.zero;
+				rigidbody.AddForce(coll.relativeVelocity * 30);
 			}
 		}
-		else
-		{
-			//做碰撞反向给力
-			Vector2 direction = Vector2.zero;
-
-			foreach (ContactPoint2D contact in coll.contacts)
-			{
-				//direction += new Vector2(transform.position.x,transform.position.y) - contact.point;
-				//Debug.Log(contact.relativeVelocity+"|"+contact.normal);
-				direction += getReflex(-contact.relativeVelocity, contact.normal) * Vector3.Distance(Vector3.zero, contact.relativeVelocity);
-			}
-			//Debug.Log(coll.contacts.Length);
-			rigidbody.AddForce(direction * 20);
-		}
-		*/
-
 	}
 
 	void OnCollisionExit2D(Collision2D coll)
@@ -114,15 +97,6 @@ public class CharacterController2D : MonoBehaviour
 		displayRect.height = a.y;
 	}
 
-	
-
-	Vector2 getReflex(Vector2 I ,Vector2 N)
-	{
-		I = I.normalized;
-		N = N.normalized;
-		Vector2 R = I - 2 * Vector3.Dot(I , N) * N;
-		return R;
-	}
 
 	//计算左右穿越
 	void updateBoundary()
@@ -162,11 +136,25 @@ public class CharacterController2D : MonoBehaviour
 		{
 			move = -1;
 		}
-		rigidbody.velocity = new Vector2(move * m_MaxSpeed, rigidbody.velocity.y);
+		/*
+		if (rigidbody.velocity.x * move < 0 )
+		{
+			//rigidbody.velocity = new Vector2(move * m_MaxSpeed , rigidbody.velocity.y);
+		}*/
+		if (Mathf.Abs(rigidbody.velocity.x) < m_MaxSpeed * Mathf.Abs(move))
+		{
+			float dir = move < 0 ? -1 : 1;
+			rigidbody.AddForce(new Vector2( m_Acceleration,0)*Time.deltaTime * dir);
+		}
+		
 
-		animator.SetFloat("Speed", Mathf.Abs(move));
-
-		sprite.flipX = move > 0 ? false : true;
+		if (move > 0)
+		{
+			sprite.flipX = false;
+		}else if (move < 0)
+		{
+			sprite.flipX = true;
+		}
 
 		if (jump)
 		{
@@ -175,11 +163,30 @@ public class CharacterController2D : MonoBehaviour
 		}
 	}
 
+	public void move(Vector3 position)
+	{
+		if (balloonsController && !balloonsController.hasBalloon)
+		{
+			rigidbody.velocity = new Vector2(0, rigidbody.velocity.y);
+			animator.SetFloat("Speed", 0);
+			return;
+		}
+		rigidbody.MovePosition(position);
+	}
+
 	/// <summary>
 	/// 吹气
 	/// </summary>
 	public void blowing()
 	{
-		//balloonsController.blow(3);
+		if (balloonsController && !balloonsController.hasBalloon)
+		{
+			balloonsController.blowing(1f / 2 * Time.fixedDeltaTime);
+		}
+	}
+
+	public void attack()
+	{
+		
 	}
 }
