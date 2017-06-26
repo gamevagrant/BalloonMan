@@ -101,7 +101,7 @@ public class BalloonsController : MonoBehaviour
 			int index = 0;
 			for (int i = 0; i < balloons.Count; i++)
 			{
-				if (!balloons[i].isBroken)
+				if (!balloons[i].isBroken && index<currentCount)
 				{
 					Debug.Log(i + "|" + currentCount + "|" + index);
 					balloons[i].setData(balloonDatas[currentCount][index]);
@@ -149,7 +149,10 @@ public class BalloonsController : MonoBehaviour
 		}
 		if (progress >= 1)
 		{
-
+			for (int i = 0; i < balloons.Count; i++)
+			{
+				balloons[i].collider.enabled = true;
+			}
 			hasBalloon = true;
 			progress = 0;
 		}

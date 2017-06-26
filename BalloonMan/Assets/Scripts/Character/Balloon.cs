@@ -10,7 +10,7 @@ public class Balloon : MonoBehaviour
 	public bool isBroken = false;
 
 	private BalloonData data;
-	private CircleCollider2D collider;
+	public CircleCollider2D collider;
 
 	// Use this for initialization
 	void Awake ()
@@ -47,9 +47,11 @@ public class Balloon : MonoBehaviour
 	void broken()
 	{
 		isBroken = true;
+		collider.enabled = false;
 		transform.DOScale(new Vector3(0, 0, 0), 0.5f).SetEase(Ease.OutExpo).OnComplete(() =>
 		{
 			gameObject.SetActive(false);
+			
 		});
 	}
 
