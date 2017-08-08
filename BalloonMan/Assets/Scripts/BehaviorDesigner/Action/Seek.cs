@@ -17,6 +17,7 @@ public class Seek : Action
 		character = gameObject.GetComponent<CharacterController2D>();
 		rigidbody = gameObject.GetComponent<Rigidbody2D>();
 		character.m_JumpForce = 200;
+		
 	}
 
 	public override TaskStatus OnUpdate()
